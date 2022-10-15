@@ -13,7 +13,7 @@ applycal_to_orig_MSes.py
 *.alpha*
 *.gridwt
 *.mask
-weblog
+weblog/
 .*.swp
 *.ipynb_checkpoints
 
