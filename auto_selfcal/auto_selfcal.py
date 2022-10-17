@@ -4,6 +4,7 @@
 # switch heirarchy of selfcal_library such that solint is at a higher level than vis. makes storage of some parameters awkward since they live
 #    in the per vis level instead of per solint
 
+from .selfcal_helpers import *
 import glob
 import os
 import pickle
@@ -15,12 +16,6 @@ from casatasks import *
 
 parallel = MPIEnvironment.is_mpi_enabled
 
-try:
-    # run as a Pipeline extern module
-    from .selfcal_helpers import *
-except ImportError as error:
-    # run as a script when selfcal_helpers is in the working directory
-    from selfcal_helpers import *
 
 LOG = get_selfcal_logger(__name__)
 
@@ -32,9 +27,11 @@ LOG = get_selfcal_logger(__name__)
 ###################################################################################################
 
 
-def selfcal_workflow():
+def selfcal_workflow(vislist):
+    """Perform auto_selfcal for the specified MSs."""
 
-    vislist, vis, all_targets, do_amp_selfcal, inf_EB_gaincal_combine, inf_EB_gaintype, gaincal_minsnr, minsnr_to_proceed, delta_beam_thresh, n_ants, telescope, rel_thresh_scaling, dividing_factor, check_all_spws, apply_to_target_ms, bands, band_properties, spwsarray, vislist_orig, spwstring_orig, cellsize, imsize, nterms, applycal_interp, selfcal_library, solints, gaincal_combine, solmode, applycal_mode, integration_time = prep_selfcal()
+    vislist, vis, all_targets, do_amp_selfcal, inf_EB_gaincal_combine, inf_EB_gaintype, gaincal_minsnr, minsnr_to_proceed, delta_beam_thresh, n_ants, telescope, rel_thresh_scaling, dividing_factor, check_all_spws, apply_to_target_ms, bands, band_properties, spwsarray, vislist_orig, spwstring_orig, cellsize, imsize, nterms, applycal_interp, selfcal_library, solints, gaincal_combine, solmode, applycal_mode, integration_time = prep_selfcal(
+        vislist)
 
     ##
     # create initial images for each target to evaluate SNR and beam
@@ -982,32 +979,10 @@ def selfcal_workflow():
                     if delta_beamarea > 0.05:
                         LOG.info('WARNING SPW '+spw+' HAS A >0.05 CHANGE IN BEAM AREA POST SELFCAL')
 
-    ##
-    # Save final library results
-    ##
-    with open('selfcal_library.pickle', 'wb') as handle:
-        pickle.dump(selfcal_library, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with open('solints.pickle', 'wb') as handle:
-        pickle.dump(solints, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with open('bands.pickle', 'wb') as handle:
-        pickle.dump(bands, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    generate_weblog(selfcal_library, solints, bands)
+    return selfcal_library, solints, bands
 
 
-def prep_selfcal():
-
-    LOG.info('Start the auto_selfcal workflow...')
-    ##
-    # Get list of MS files in directory
-    ##
-    vislist = glob.glob('*_targets.ms')
-    if len(vislist) == 0:
-        vislist = glob.glob('*_cont.ms')   # adaptation for PL2022 output
-        if len(vislist) == 0:
-            sys.exit('No Measurement sets found in current working directory, exiting')
+def prep_selfcal(vislist):
 
     ##
     # save starting flags or restore to the starting flags
@@ -1206,6 +1181,45 @@ def prep_selfcal():
     return vislist, vis, all_targets, do_amp_selfcal, inf_EB_gaincal_combine, inf_EB_gaintype, gaincal_minsnr, minsnr_to_proceed, delta_beam_thresh, n_ants, telescope, rel_thresh_scaling, dividing_factor, check_all_spws, apply_to_target_ms, bands, band_properties, spwsarray, vislist_orig, spwstring_orig, cellsize, imsize, nterms, applycal_interp, selfcal_library, solints, gaincal_combine, solmode, applycal_mode, integration_time
 
 
+def get_vislist():
+    """Get list of MS files in directory."""
+
+    vislist = glob.glob('*_targets.ms')
+    if len(vislist) == 0:
+        vislist = glob.glob('*_cont.ms')   # adaptation for PL2022 output
+        if len(vislist) == 0:
+            sys.exit('No Measurement sets found in current working directory, exiting')
+    return vislist
+
+
+def save_sclib(selfcal_library, solints, bands, filename='selfcal_library.pickle'):
+    """Save final library results."""
+
+    with open(filename, 'wb') as f:
+        pickle.dump((selfcal_library, solints, bands), f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def read_sclib(filename='selfcal_library.pickle'):
+    """Read selfcal library."""
+
+    with open(filename, 'rb') as f:
+        selfcal_library, solints, bands = pickle.load(f)
+    return selfcal_library, solints, bands
+
+
+def main():
+
+    LOG.info('Start the auto_selfcal workflow...')
+
+    vislist = get_vislist()
+
+    selfcal_library, solints, bands = selfcal_workflow(vislist)
+    save_sclib(selfcal_library, solints, bands, filename='selfcal_library.pickle')
+
+    selfcal_library, solints, bands = read_sclib(filename='selfcal_library.pickle')
+    generate_weblog(selfcal_library, solints, bands)
+
+
 if __name__ == '__main__':
 
-    selfcal_workflow()
+    main()
