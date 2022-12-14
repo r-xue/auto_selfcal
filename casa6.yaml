@@ -1,7 +1,7 @@
 ############################################################################
 # conda env create -f casa6 casa6.yaml
 # conda activate casa6
-# pip install casatools casadata casatasks casaplotms casampi casaviewer
+# pip install casatools casadata casatasks casaplotms casampi casaviewer almatasks
 #
 # run autoself_cal with the modular casa6:
 #   xvfb-run -a python auto_selfcal.py
@@ -35,3 +35,4 @@ dependencies:
   - pycodestyle
   - pytest-cov
   - pytest-pep8
+  - pympler

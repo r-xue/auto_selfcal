@@ -1192,14 +1192,14 @@ def get_vislist():
     return vislist
 
 
-def save_sclib(selfcal_library, solints, bands, filename='selfcal_library.pickle'):
+def save_sclib(selfcal_library, solints, bands, filename='selfcal_results.pickle'):
     """Save final library results."""
 
     with open(filename, 'wb') as f:
         pickle.dump((selfcal_library, solints, bands), f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def read_sclib(filename='selfcal_library.pickle'):
+def read_sclib(filename='selfcal_results.pickle'):
     """Read selfcal library."""
 
     with open(filename, 'rb') as f:
@@ -1214,9 +1214,9 @@ def main():
     vislist = get_vislist()
 
     selfcal_library, solints, bands = selfcal_workflow(vislist)
-    save_sclib(selfcal_library, solints, bands, filename='selfcal_library.pickle')
+    save_sclib(selfcal_library, solints, bands, filename='selfcal_results.pickle')
 
-    selfcal_library, solints, bands = read_sclib(filename='selfcal_library.pickle')
+    selfcal_library, solints, bands = read_sclib(filename='selfcal_results.pickle')
     generate_weblog(selfcal_library, solints, bands)
 
 
