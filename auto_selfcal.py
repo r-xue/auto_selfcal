@@ -4,18 +4,19 @@
 # switch heirarchy of selfcal_library such that solint is at a higher level than vis. makes storage of some parameters awkward since they live
 #    in the per vis level instead of per solint
 
+sys.path.append("./")
+
 import json
 from prepare_selfcal import prepare_selfcal, set_clean_thresholds
-from image_analysis_helpers import *
+from image_analysis_helpers import get_image_stats
 from run_selfcal import run_selfcal
 from selfcal_helpers import *
 import numpy as np
-from scipy import stats
 import glob
-import sys
 import pickle
-# execfile('selfcal_helpers.py',globals())
-sys.path.append("./")
+import sys
+
+
 
 # Mac builds of CASA lack MPI and error without this try/except
 try:

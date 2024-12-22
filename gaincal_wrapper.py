@@ -1,11 +1,7 @@
 from casampi.MPIEnvironment import MPIEnvironment
-from selfcal_helpers import *
+from selfcal_helpers import analyze_inf_EB_flagging,rank_refants,sanitize_string,triage_calibrators,unflag_failed_antennas
 import numpy as np
-from scipy import stats
-import glob
-import sys
-# execfile('selfcal_helpers.py',globals())
-sys.path.append("./")
+
 parallel = MPIEnvironment.is_mpi_enabled
 
 

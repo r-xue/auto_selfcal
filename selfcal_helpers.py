@@ -2,7 +2,6 @@ import numpy as np
 import numpy 
 import scipy.stats
 import scipy.signal
-import math
 import os
 
 import casatools

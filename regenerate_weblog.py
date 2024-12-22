@@ -1,8 +1,7 @@
 import pickle
-import numpy as np
-from scipy import stats
-import glob
-execfile('selfcal_helpers.py', globals())
+
+from selfcal_helpers import generate_weblog
+
 with open('selfcal_library.pickle', 'rb') as handle:
     selfcal_library = pickle.load(handle)
 

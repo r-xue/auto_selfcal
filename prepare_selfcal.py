@@ -1,9 +1,5 @@
-from selfcal_helpers import *
+from selfcal_helpers import fetch_targets,flag_spectral_lines,get_image_parameters,get_n_ants,get_sensitivity,get_solints_simple,get_spw_bandwidth,get_spw_map,get_telescope,get_uv_range,importdata,rank_refants,split_to_selfcal_ms
 import numpy as np
-import glob
-import sys
-# execfile('selfcal_helpers.py',globals())
-sys.path.append("./")
 
 
 def prepare_selfcal(vislist,

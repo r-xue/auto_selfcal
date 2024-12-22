@@ -1,8 +1,5 @@
-from selfcal_helpers import *
+from selfcal_helpers import checkmask,estimate_near_field_SNR,get_intflux,sanitize_string
 import numpy as np
-import sys
-# execfile('selfcal_helpers.py',globals())
-sys.path.append("./")
 
 
 def evaluate_subfields_to_gaincal(selfcal_library, target, band, solint, iteration, solmode, solints, selfcal_plan,
@@ -12,55 +9,55 @@ def evaluate_subfields_to_gaincal(selfcal_library, target, band, solint, iterati
 
     # Fields that don't have any mask in the primary beam should be removed from consideration, as their models are likely bad.
     new_fields_to_selfcal = []
-     for fid in selfcal_library['sub-fields-to-selfcal']:
-         os.system('rm -rf test*.mask')
-         tmp_SNR_NF, tmp_RMS_NF = estimate_near_field_SNR(sani_target+'_field_'+str(fid)+'_'+band+'_'+solint+'_'+str(iteration)+'.image.tt0',
-                                                         las=selfcal_library['LAS'], mosaic_sub_field=True, save_near_field_mask=False)
+    for fid in selfcal_library['sub-fields-to-selfcal']:
+        os.system('rm -rf test*.mask')
+        tmp_SNR_NF, tmp_RMS_NF = estimate_near_field_SNR(sani_target+'_field_'+str(fid)+'_'+band+'_'+solint+'_'+str(iteration)+'.image.tt0',
+                                                        las=selfcal_library['LAS'], mosaic_sub_field=True, save_near_field_mask=False)
 
-         immath(imagename=[sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
-                           sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".pb.tt0",
-                           sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".mospb.tt0"], outfile="test.mask",
-                expr="IIF(IM0*IM1/IM2 > "+str(5*tmp_RMS_NF)+", 1., 0.)")
+        immath(imagename=[sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
+                        sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".pb.tt0",
+                        sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".mospb.tt0"], outfile="test.mask",
+            expr="IIF(IM0*IM1/IM2 > "+str(5*tmp_RMS_NF)+", 1., 0.)")
 
-         bmaj = ''.join(np.array(list(imhead(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
-                                             mode="get", hdkey="bmaj").values())[::-1]).astype(str))
-         bmin = ''.join(np.array(list(imhead(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
-                                             mode="get", hdkey="bmin").values())[::-1]).astype(str))
-         bpa = ''.join(np.array(list(imhead(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
-                                            mode="get", hdkey="bpa").values())[::-1]).astype(str))
+        bmaj = ''.join(np.array(list(imhead(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
+                                            mode="get", hdkey="bmaj").values())[::-1]).astype(str))
+        bmin = ''.join(np.array(list(imhead(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
+                                            mode="get", hdkey="bmin").values())[::-1]).astype(str))
+        bpa = ''.join(np.array(list(imhead(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
+                                        mode="get", hdkey="bpa").values())[::-1]).astype(str))
 
-         imsmooth("test.mask", kernel="gauss", major=bmaj, minor=bmin, pa=bpa, outfile="test.smoothed.mask")
+        imsmooth("test.mask", kernel="gauss", major=bmaj, minor=bmin, pa=bpa, outfile="test.smoothed.mask")
 
-         immath(imagename=["test.smoothed.mask", sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".mask"],
-                outfile="test.smoothed.truncated.mask", expr="IIF(IM0 > 0.01 || IM1 > 0., 1., 0.)")
+        immath(imagename=["test.smoothed.mask", sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".mask"],
+            outfile="test.smoothed.truncated.mask", expr="IIF(IM0 > 0.01 || IM1 > 0., 1., 0.)")
 
-         original_intflux = get_intflux(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
-                                        rms=tmp_RMS_NF, maskname=sani_target+"_field_" +
-                                            str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".mask",
-                                        mosaic_sub_field=True)[0]
-         updated_intflux = get_intflux(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
-                                       rms=tmp_RMS_NF, maskname="test.smoothed.truncated.mask", mosaic_sub_field=True)[0]
-         os.system('rm -rf test*.mask')
+        original_intflux = get_intflux(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
+                                    rms=tmp_RMS_NF, maskname=sani_target+"_field_" +
+                                        str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".mask",
+                                    mosaic_sub_field=True)[0]
+        updated_intflux = get_intflux(sani_target+"_field_"+str(fid)+"_"+band+"_"+solint+"_"+str(iteration)+".image.tt0",
+                                    rms=tmp_RMS_NF, maskname="test.smoothed.truncated.mask", mosaic_sub_field=True)[0]
+        os.system('rm -rf test*.mask')
 
-         if not checkmask(sani_target+'_field_'+str(fid)+'_'+band+'_'+solint+'_'+str(iteration)+'.image.tt0'):
-             print("Removing field "+str(fid)+" from gaincal because there is no signal within the primary beam.")
-             skip_reason = "No signal"
-         elif selfcal_plan[fid]['solint_snr_per_field'][solints[iteration]] < minsnr_to_proceed and \
-                 solint not in ['inf_EB', 'scan_inf']:
-             print("Removing field "+str(fid)+" from gaincal because the estimated solint snr is too low.")
-             skip_reason = "Estimated SNR"
-         elif updated_intflux > 1.25 * original_intflux:
-             print("Removing field "+str(fid)+" from gaincal because there appears to be significant flux missing from the model.")
-             skip_reason = "Missing flux"
-         else:
-             new_fields_to_selfcal.append(fid)
+        if not checkmask(sani_target+'_field_'+str(fid)+'_'+band+'_'+solint+'_'+str(iteration)+'.image.tt0'):
+            print("Removing field "+str(fid)+" from gaincal because there is no signal within the primary beam.")
+            skip_reason = "No signal"
+        elif selfcal_plan[fid]['solint_snr_per_field'][solints[iteration]] < minsnr_to_proceed and \
+                solint not in ['inf_EB', 'scan_inf']:
+            print("Removing field "+str(fid)+" from gaincal because the estimated solint snr is too low.")
+            skip_reason = "Estimated SNR"
+        elif updated_intflux > 1.25 * original_intflux:
+            print("Removing field "+str(fid)+" from gaincal because there appears to be significant flux missing from the model.")
+            skip_reason = "Missing flux"
+        else:
+            new_fields_to_selfcal.append(fid)
 
-         if fid not in new_fields_to_selfcal and solint != "inf_EB" and not allow_gain_interpolation:
-             for vis in selfcal_library[fid]['vislist']:
-                 # selfcal_library[fid][vis][solint]['interpolated_gains'] = True
-                 # selfcal_library[fid]['Stop_Reason'] = "Gaincal solutions would be interpolated"
-                 selfcal_library[fid][vis][solint]['Pass'] = "None"
-                 selfcal_library[fid][vis][solint]['Fail_Reason'] = skip_reason
+        if fid not in new_fields_to_selfcal and solint != "inf_EB" and not allow_gain_interpolation:
+            for vis in selfcal_library[fid]['vislist']:
+                # selfcal_library[fid][vis][solint]['interpolated_gains'] = True
+                # selfcal_library[fid]['Stop_Reason'] = "Gaincal solutions would be interpolated"
+                selfcal_library[fid][vis][solint]['Pass'] = "None"
+                selfcal_library[fid][vis][solint]['Fail_Reason'] = skip_reason
 
      return new_fields_to_selfcal
 

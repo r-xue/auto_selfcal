@@ -1,7 +1,4 @@
-from selfcal_helpers import *
-import sys
-# execfile('selfcal_helpers.py',globals())
-sys.path.append("./")
+from selfcal_helpers import estimate_SNR, estimate_near_field_SNR, get_intflux, checkmask
 
 
 def get_image_stats(image, mask, backup_mask, selfcal_library, use_nfmask, solint, suffix, mosaic_sub_field=False, spw='all'):

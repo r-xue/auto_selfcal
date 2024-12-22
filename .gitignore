@@ -20,3 +20,4 @@ pipeline*
 flux.csv
 cont.dat
 casacalls*
+__pycache__/*
